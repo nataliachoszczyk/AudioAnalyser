@@ -1,79 +1,80 @@
 import numpy as np
 import pandas as pd
-    
-# def get_clip_params(audio, sampling_rate, frame_length, frame_step):
-#     # Obliczanie długości klipu w próbkach
-#     frame_length_samples = frame_length * sampling_rate
-#     frame_step_samples = frame_step * sampling_rate
-    
-#     # Lista, która przechowa parametry dla każdej sekundy
-#     params_per_second = []
-    
-#     # Oblicz liczbę pełnych sekund
-#     num_frames = int(np.ceil(len(audio) / frame_step_samples))  # Używamy ceil, aby uwzględnić ostatni fragment
-    
-#     for i in range(num_frames):
-#         # Fragment audio
-#         start_idx = i * frame_step_samples
-#         end_idx = min(start_idx + frame_length_samples, len(audio))  # Używamy min, by nie wyjść poza długość audio
-#         clip = audio[start_idx:end_idx]
-        
-#         # Obliczanie parametrów dla fragmentu
-#         vstd = np.std(clip) / np.mean(clip) if np.mean(clip) != 0 else 0
-#         vdr = (np.max(clip) - np.min(clip)) / np.max(clip) if np.max(clip) != 0 else 0
-#         vu = np.mean(np.abs(clip))
-#         lster = 0  # Przykładowo, tutaj może być jakaś definicja
-#         energy_entropy = 0  # Przykładowo, tutaj może być obliczenie entropii
-#         zstd = 0  # Możesz dodać liczenie zstd na podstawie zero crossings
-#         hzcrr = 0  # Możesz dodać obliczenia HZCRR
-        
-#         # Dodaj parametr do listy
-#         params_per_second.append([vstd, vdr, vu, lster, energy_entropy, zstd, hzcrr])
-    
-#     # Tworzenie DataFrame
-#     df = pd.DataFrame(params_per_second, columns=["VSTD", "VDR", "VU", "LSTER", "Energy Entropy", "ZSTD", "HZCRR"])
-    
-#     # Generowanie nagłówków na podstawie numeru sekundy
-#     df.index = [f"Second {i+1}" for i in range(df.shape[0])]
-#     df.round(3)
-    
-    
-#     return df
 
+def get_clip_params(audio, sampling_rate, frame_size, frame_step):
 
-def get_clip_params(audio, sampling_rate, frame_length, frame_step):
-    # Obliczanie długości klipu w próbkach
-    frame_length_samples = frame_length * sampling_rate
-    frame_step_samples = frame_step * sampling_rate
+    if frame_size > len(audio):
+        frame_size = len(audio)
+
+    frames = np.lib.stride_tricks.sliding_window_view(audio, frame_size)[::frame_step]
     
-    # Lista, która przechowa parametry dla każdej sekundy
+    num_seconds = int(np.ceil(len(audio) / sampling_rate)) 
     params_per_second = []
     
-    # Oblicz liczbę pełnych sekund
-    num_seconds = int(np.ceil(len(audio) / sampling_rate)) 
-    
     for i in range(num_seconds):
-        # Fragment audio (1 sekunda)
         start_idx = i * sampling_rate
         end_idx = (i + 1) * sampling_rate
         clip = audio[start_idx:end_idx]
-        
-        # Obliczanie parametrów dla fragmentu
+
+        frames_in_clip = frames[(start_idx // frame_step): (end_idx // frame_step)]
+
+        # CLIP PARAMS
+
+        # VSTD
         vstd = np.std(clip) / np.mean(clip) if np.mean(clip) != 0 else 0
+
+        # VDR
         vdr = (np.max(clip) - np.min(clip)) / np.max(clip) if np.max(clip) != 0 else 0
+
+        # VU
         vu = np.mean(np.abs(clip))
-        lster = 0  # Przykładowo, tutaj może być jakaś definicja
-        energy_entropy = 0  # Przykładowo, tutaj może być obliczenie entropii
-        zstd = 0  # Możesz dodać liczenie zstd na podstawie zero crossings
-        hzcrr = 0  # Możesz dodać obliczenia HZCRR
+
+        # LSTER
+        frame_ste = np.sum(frames_in_clip**2, axis=1) / frame_size if frames_in_clip.size > 0 else []
+        avg_ste = np.mean(frame_ste) if len(frame_ste) > 0 else 0
+        lster = np.sum(frame_ste < 0.5 * avg_ste) / (len(frame_ste) * 2) if avg_ste > 0 else 0
+
+        # Energy Entropy
+        segment_size = max(1, len(clip) // 10)
+        energy_segments = [np.sum(clip[j:j + segment_size]**2) for j in range(0, len(clip) - segment_size, segment_size)]
+        total_energy = np.sum(energy_segments)
         
-        # Dodaj parametr do listy
-        params_per_second.append([vstd, vdr, vu, lster, energy_entropy, zstd, hzcrr])
+        if total_energy > 0:
+            normalized_energy = np.array(energy_segments) / total_energy
+            energy_entropy = -np.sum(normalized_energy * np.log2(normalized_energy + 1e-10))
+        else:
+            energy_entropy = 0
+
+        # ZSTD
+        if frames_in_clip.size > 0:
+            zero_crossings = np.diff(np.sign(frames_in_clip), axis=1)
+            if zero_crossings.size > 0:
+                zcr_values = np.sum(zero_crossings != 0, axis=1) / (frame_size * 2)
+                zstd = np.std(zcr_values) if len(zcr_values) > 1 else 0
+            else:
+                zcr_values = []
+                zstd = 0
+        else:
+            zcr_values = []
+            zstd = 0
+
+        # HZCRR
+        avg_zcr = np.mean(zcr_values) if len(zcr_values) > 0 else 0
+        hzcrr = np.sum(zcr_values > 1.5 * avg_zcr) / (len(zcr_values) * 2) if len(zcr_values) > 0 else 0
+
+        # type
+        if lster > 0.15 and zstd > 0.015:
+            clip_type = "Speech"
+        elif lster < 0.15 and zstd < 0.015:
+            clip_type = "Music"
+        else:
+            clip_type = "Unknown"
+        
+        params_per_second.append([clip_type, vstd, vdr, vu, lster, energy_entropy, zstd, hzcrr])
     
-    # Tworzenie DataFrame
-    df = pd.DataFrame(params_per_second, columns=["VSTD", "VDR", "VU", "LSTER", "Energy Entropy", "ZSTD", "HZCRR"])
+    # dataframe
+    df = pd.DataFrame(params_per_second, columns=["Type", "VSTD", "VDR", "VU", "LSTER", "Energy Entropy", "ZSTD", "HZCRR"])
     df = df.round(3)
-    # Generowanie numerów sekund jako indeksów wierszy
     df.index = [f"{i+1}s" for i in range(df.shape[0])]
     
     return df

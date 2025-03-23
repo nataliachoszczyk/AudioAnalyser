@@ -9,7 +9,6 @@ def draw_waveform_plot(audio, sampling_rate, fig, params, selected_wave_chart):
     
     time = np.linspace(0, len(audio) / sampling_rate, len(audio))
     
-    
 
     if params is not None:
         
@@ -25,7 +24,7 @@ def draw_waveform_plot(audio, sampling_rate, fig, params, selected_wave_chart):
             
         frame_times = np.linspace(0, len(audio) / sampling_rate, len(selected_data))
         legend_added = False
-        
+
         for i, data in enumerate(selected_data):
             if data and i < len(frame_times) - 1:
                 if not legend_added:
