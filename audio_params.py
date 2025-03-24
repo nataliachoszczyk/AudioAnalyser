@@ -22,23 +22,25 @@ def get_audio_params(audio, sampling_rate, frame_size, frame_step, silence_vol_t
         # voiced phones ratio
         voiced_ratio = (vol > voiced_vol_threshold) and (zcr < voiced_zcr_threshold)
         
+        min_lag = int(sampling_rate / 500)
+        max_lag = int(sampling_rate / 50)
+
         # F0 autocorrelation
         if voiced_ratio:
             autocorr = autocorr_function(frame)
-            peak_idx = np.argmax(autocorr) + 1
-            
+            peak_idx = np.argmax(autocorr[min_lag:max_lag]) + min_lag 
             f0_autocorr = sampling_rate / peak_idx if peak_idx > 0 else 0
         else:
             f0_autocorr = 0
-            
+
         # F0 AMDF
         if voiced_ratio:
             amdf = amdf_function(frame)
-            peak_idx = np.argmin(amdf) + 1
-            
+            peak_idx = np.argmin(amdf[min_lag:max_lag]) + min_lag
             f0_amdf = sampling_rate / peak_idx if peak_idx > 0 else 0
         else:
             f0_amdf = 0
+
             
         params.append({
             'ste': ste,
@@ -57,12 +59,14 @@ def autocorr_function(frame):
     N = len(frame)
     autocorr = np.zeros(N)
 
-    for lag in range(1, N):
+    for lag in range(N):
         sum_product = 0
         for i in range(N - lag):
             sum_product += frame[i] * frame[i + lag]
- 
         autocorr[lag] = sum_product
+
+    if autocorr[0] > 0:
+        autocorr /= autocorr[0]
 
     return autocorr
 
@@ -74,7 +78,6 @@ def amdf_function(frame):
         sum_diff = 0
         for i in range(N - lag):
             sum_diff += abs(frame[i] - frame[i + lag])
-        
-        amdf[lag] = sum_diff
+        amdf[lag] = sum_diff / (N - lag)
 
     return amdf
