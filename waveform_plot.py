@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from audio_params import get_audio_params
 import plotly.graph_objects as go
 
 def draw_waveform_plot(audio, sampling_rate, fig, params, selected_wave_chart):
@@ -34,22 +32,20 @@ def draw_waveform_plot(audio, sampling_rate, fig, params, selected_wave_chart):
                         fill='tozeroy', 
                         fillcolor=color,
                         mode='none',
-                        name=legend_name,  # Add to legend
-                        showlegend=True  # Enable legend for the first trace
+                        name=legend_name,
+                        showlegend=True
                     ))
                     legend_added = True
                 else:
-                    # For all subsequent silent areas, do not add to the legend
                     fig.add_trace(go.Scatter(
                         x=[frame_times[i], frame_times[i + 1]],
                         y=[np.min(audio), np.min(audio)],
                         fill='tozeroy', 
                         fillcolor=color,
                         mode='none',
-                        showlegend=False  # Do not add to the legend
+                        showlegend=False
                     ))
                     
-                # Add the upper bound of silent area (same logic as for the lower bound)
                 if not legend_added:
                     fig.add_trace(go.Scatter(
                         x=[frame_times[i], frame_times[i + 1]],
@@ -57,19 +53,18 @@ def draw_waveform_plot(audio, sampling_rate, fig, params, selected_wave_chart):
                         fill='tozeroy', 
                         fillcolor=color,
                         mode='none',
-                        name='Silent Area',  # Add to legend
-                        showlegend=True  # Enable legend for the first trace
+                        name='Silent Area',
+                        showlegend=True
                     ))
                     legend_added = True
                 else:
-                    # For all subsequent silent areas, do not add to the legend
                     fig.add_trace(go.Scatter(
                         x=[frame_times[i], frame_times[i + 1]],
                         y=[np.max(audio), np.max(audio)],
                         fill='tozeroy', 
                         fillcolor=color,
                         mode='none',
-                        showlegend=False  # Do not add to the legend
+                        showlegend=False
                     ))
 
     fig.add_trace(go.Scatter(x=time, y=audio, mode='lines', name='Waveform', line=dict(color='#1f77b4')))
@@ -134,7 +129,6 @@ def draw_params_plot(audio, sampling_rate, selected_chart, fig, params):
 
     time = np.linspace(0, len(audio) / sampling_rate, len(data))
 
-    # Create the plot for the selected chart
     fig.add_trace(go.Scatter(x=time, y=data, mode='lines', name=name, line=dict(color=color)))
 
     fig.update_layout(title=dict(text=selected_chart,

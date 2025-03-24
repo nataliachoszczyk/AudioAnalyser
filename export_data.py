@@ -1,6 +1,4 @@
-from clip_params import get_clip_params
 import pandas as pd
-import base64
 
 def export_data(audio, sampling_rate, frame_size, frame_step, vol_threshold, params):
 
