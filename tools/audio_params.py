@@ -14,7 +14,7 @@ def get_audio_params(audio, sampling_rate, frame_size, frame_step, silence_vol_t
         vol = np.sqrt(ste)
         
         # ZCR
-        zcr = (np.sum(np.abs(np.diff(np.sign(frame)))) / frame_size) / 2
+        zcr = np.sum(np.abs(np.diff(np.sign(frame)))) / frame_size
         
         # silent ratio
         silent_ratio = (vol < silence_vol_threshold) and (zcr > silence_zcr_threshold)
