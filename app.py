@@ -1,11 +1,11 @@
 import streamlit as st
 import librosa
 import plotly.graph_objects as go
-from audio_params import get_audio_params
-from clip_params import get_clip_params
-from waveform_plot import draw_waveform_plot
-from params_plot import draw_params_plot
-from export_data import export_data
+from tools.audio_params import get_audio_params
+from tools.clip_params import get_clip_params
+from tools.waveform_plot import draw_waveform_plot
+from tools.params_plot import draw_params_plot
+from tools.export_data import export_data
 
 class AudioAnalyzerApp:
     def __init__(self):
