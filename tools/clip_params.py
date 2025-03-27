@@ -63,9 +63,9 @@ def get_clip_params(audio, sampling_rate, frame_size, frame_step):
         hzcrr = np.sum(zcr_values > 1.5 * avg_zcr) / len(zcr_values) if len(zcr_values) > 0 else 0
 
         # type
-        if lster > 0.15 and zstd > 0.015:
+        if lster > 0.3 and zstd > 0.01:
             clip_type = "Speech"
-        elif lster < 0.15 and zstd < 0.015:
+        elif lster < 0.3 and zstd < 0.01:
             clip_type = "Music"
         else:
             clip_type = "Unknown"
