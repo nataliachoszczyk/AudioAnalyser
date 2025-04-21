@@ -32,11 +32,10 @@ def get_clip_params(audio, sampling_rate, frame_size, frame_step):
         # LSTER
         frame_ste = np.sum(frames_in_clip**2, axis=1) / frame_size if frames_in_clip.size > 0 else []
         avg_ste = np.mean(frame_ste) if len(frame_ste) > 0 else 0
-<<<<<<<< HEAD:time_analysis_app/clip_params.py
+
         lster = np.sum(frame_ste < 0.5 * avg_ste) / (len(frame_ste) * 2) if avg_ste > 0 else 0
-========
+
         lster = np.sum(frame_ste < 0.5 * avg_ste) / len(frame_ste) if avg_ste > 0 else 0
->>>>>>>> a3a978adb20340a3ed4135bb07d0c03ff02a11fa:tools/clip_params.py
 
         # Energy Entropy
         segment_size = max(1, len(clip) // 10)
@@ -64,21 +63,20 @@ def get_clip_params(audio, sampling_rate, frame_size, frame_step):
 
         # HZCRR
         avg_zcr = np.mean(zcr_values) if len(zcr_values) > 0 else 0
-<<<<<<<< HEAD:time_analysis_app/clip_params.py
-        hzcrr = np.sum(zcr_values > 1.5 * avg_zcr) / (len(zcr_values) * 2) if len(zcr_values) > 0 else 0
 
         # type
         if lster > 0.15 and zstd > 0.015:
             clip_type = "Speech"
         elif lster < 0.15 and zstd < 0.015:
-========
+            clip_type = "Music"
+
         hzcrr = np.sum(zcr_values > 1.5 * avg_zcr) / len(zcr_values) if len(zcr_values) > 0 else 0
 
         # type
         if lster > 0.3 and zstd > 0.01:
             clip_type = "Speech"
         elif lster < 0.3 and zstd < 0.01:
->>>>>>>> a3a978adb20340a3ed4135bb07d0c03ff02a11fa:tools/clip_params.py
+
             clip_type = "Music"
         else:
             clip_type = "Unknown"

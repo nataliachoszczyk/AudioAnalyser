@@ -14,7 +14,7 @@ class AudioAnalyzerApp:
 
     def main(self):
         st.set_page_config(page_title="Audio Analyser", page_icon="🎵")
-        st.title("🎵 Audio Analyser - frequency analysis")
+        st.title("🎵 Audio Analyser - frequency")
 
         uploaded_file = st.file_uploader("Upload a WAV file", type=["wav"])
 

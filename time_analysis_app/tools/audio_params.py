@@ -14,11 +14,7 @@ def get_audio_params(audio, sampling_rate, frame_size, frame_step, silence_vol_t
         vol = np.sqrt(ste)
         
         # ZCR
-<<<<<<<< HEAD:time_analysis_app/audio_params.py
-        zcr = (np.sum(np.abs(np.diff(np.sign(frame)))) / frame_size) / 2
-========
         zcr = np.sum(np.abs(np.diff(np.sign(frame)))) / frame_size
->>>>>>>> a3a978adb20340a3ed4135bb07d0c03ff02a11fa:tools/audio_params.py
         
         # silent ratio
         silent_ratio = (vol < silence_vol_threshold) and (zcr > silence_zcr_threshold)
