@@ -26,7 +26,7 @@ class AudioAnalyzerApp:
             ########### WAVEFORM PLOT ##########
             st.subheader("Waveform Plot")
             fig_waveform = plot_time_waveform(self.audio, 0, len(self.audio) / self.sampling_rate, self.sampling_rate)
-            st.plotly_chart(fig_waveform)
+            st.plotly_chart(fig_waveform, key='waveform')
 
             ########### FREQUENCY FEATURES ##########
             st.subheader("Frequency Features")
@@ -35,7 +35,7 @@ class AudioAnalyzerApp:
 
             selected_feature = st.selectbox("Select frequency-domain feature to display", feature_options)
             fig_feature = plot_frequency_feature(freq_features, selected_feature)
-            st.plotly_chart(fig_feature)
+            st.plotly_chart(fig_feature, key='frequency_feature')
 
             ########### FFT ##########
             st.subheader("FFT and Windowing")
@@ -75,26 +75,24 @@ class AudioAnalyzerApp:
             col1, col2 = st.columns(2)
             with col1:
                 fig_time_no_window = plot_time_waveform(self.audio, start_time, frame_length_sec, self.sampling_rate, title="Time (No Window)")
-                st.plotly_chart(fig_time_no_window)
+                st.plotly_chart(fig_time_no_window, key='time_no_window')
 
             with col2:
                 fig_time_window = plot_time_waveform(self.audio, start_time, frame_length_sec, self.sampling_rate, title="Time (With Window)", with_window=True, window_type=window_type)
-                st.plotly_chart(fig_time_window)
+                st.plotly_chart(fig_time_window, key='time_window')
 
             col3, col4 = st.columns(2)
             with col3:
                 fig_freq_no_window = plot_fft(self.audio, self.sampling_rate, start_time, frame_length_sec)
-                st.plotly_chart(fig_freq_no_window)
+                st.plotly_chart(fig_freq_no_window, key='fft_no_window')
 
             with col4:
                 fig_freq_window = plot_fft(self.audio, self.sampling_rate, start_time, frame_length_sec, window_type=window_type, window=True)
-                st.plotly_chart(fig_freq_window)
+                st.plotly_chart(fig_freq_window, key='fft_window')
 
 
             ########### SPECTROGRAM ##########
             st.subheader("Spectrogram")
-
-            st.markdown("#### Spectrogram Settings")
 
             col5, col6, col7 = st.columns(3)
             with col5:
@@ -102,7 +100,7 @@ class AudioAnalyzerApp:
             with col6:
                 overlap_percent = st.slider("Overlap between frames (%)", 0, 90, 50, step=5)
             with col7:
-                spec_window_type = st.selectbox("Window type", ['rectangular', 'triangular', 'hamming', 'hann', 'blackman', 'gaussian'], index=3)
+                spec_window_type = st.selectbox("Window type", ['rectangular', 'triangular', 'hamming', 'hann', 'blackman', 'gaussian'], index=0)
 
             spec_frame_step = int(spec_frame_size * (1 - overlap_percent / 100))
 
@@ -115,7 +113,7 @@ class AudioAnalyzerApp:
             )
 
             fig_spectrogram = plot_spectrogram(freqs, times, spec)
-            st.plotly_chart(fig_spectrogram)
+            st.plotly_chart(fig_spectrogram, key='spectrogram')
 
             ########### FUNDAMENTAL FREQUENCY - CEPSTRUM ##########
             st.subheader("Fundamental Frequency (Cepstrum Method)")
@@ -123,9 +121,9 @@ class AudioAnalyzerApp:
             colL, colR = st.columns(2)
             with colL:
                 f0_frame_size = st.selectbox("Frame size (samples)", [256, 512, 1024, 2048], index=1, key='cepstrum_frame')
-                min_f0 = st.number_input("Minimum F0 (Hz)", min_value=20, max_value=100, value=50)
-            with colR:
                 f0_overlap = st.slider("Overlap (%)", 0, 90, 50, step=5, key='cepstrum_overlap')
+            with colR:
+                min_f0 = st.number_input("Minimum F0 (Hz)", min_value=20, max_value=100, value=50)
                 max_f0 = st.number_input("Maximum F0 (Hz)", min_value=100, max_value=500, value=400)
 
             f0_step = int(f0_frame_size * (1 - f0_overlap / 100))
@@ -139,8 +137,12 @@ class AudioAnalyzerApp:
                 f0_max=max_f0
             )
 
+            quefrency, cepstrum = compute_global_cepstrum(self.audio, self.sampling_rate)
+            fig_cepstrum_global = plot_global_cepstrum(quefrency, cepstrum, min_f0, max_f0, self.sampling_rate)
+            st.plotly_chart(fig_cepstrum_global, key='cepstrum_global')
+
             fig_pitch = plot_pitch_track(times, f0_values)
-            st.plotly_chart(fig_pitch)
+            st.plotly_chart(fig_pitch, key='pitch_track')
 
 
 if __name__ == "__main__":

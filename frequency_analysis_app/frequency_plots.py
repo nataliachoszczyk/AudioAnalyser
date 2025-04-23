@@ -37,7 +37,7 @@ def plot_time_waveform(audio, start_time, frame_length_sec, sampling_rate, title
         mode="lines"
     ))
     
-    fig.update_layout(title=title, xaxis_title="Time (s)", yaxis_title="Amplitude")
+    fig.update_layout(title=f"Time {'(With Window: ' + window_type + ')' if with_window else '(No Window)'}", xaxis_title="Time (s)", yaxis_title="Amplitude")
     return fig
 
 def plot_fft(audio, sampling_rate, start_time, frame_length_sec, window_type=None, window=False):
@@ -49,7 +49,11 @@ def plot_fft(audio, sampling_rate, start_time, frame_length_sec, window_type=Non
     mask = freq <= 5000
     fig = go.Figure()
     fig.add_trace(go.Bar(x=freq[mask], y=mag[mask], name="Spectrum"))
-    fig.update_layout(title="FFT " + ("(With Window)" if window else "(No Window)"), xaxis_title="Frequency (Hz)", yaxis_title="Magnitude")
+    fig.update_layout(
+        title=f"FFT {'(With Window: ' + window_type + ')' if window else '(No Window)'}",
+        xaxis_title="Frequency (Hz)",
+        yaxis_title="Magnitude"
+    )
     return fig
 
 def plot_frequency_feature(freq_features, selected_feature):
@@ -78,7 +82,6 @@ def plot_spectrogram(freqs, times, spec, db_scale=True):
     ))
 
     fig.update_layout(
-        title="Spectrogram",
         xaxis_title="Time (s)",
         yaxis_title="Frequency (Hz)",
         yaxis=dict(range=[0, 5000])
@@ -96,9 +99,37 @@ def plot_pitch_track(times, f0_values):
     ))
 
     fig.update_layout(
-        title="Fundamental Frequency (F0) via Cepstrum",
+        title="Fundamental Frequency (F0)",
         xaxis_title="Time (s)",
         yaxis_title="Frequency (Hz)",
         yaxis=dict(range=[0, 500])
     )
+    return fig
+
+def plot_global_cepstrum(quefrency, cepstrum, f0_min=50, f0_max=400, sr=22050):
+    # Oblicz zakres quefrency do zachowania (domyślnie 1/f0_max do 1/f0_min)
+    min_q = 1 / f0_max
+    max_q = 1 / f0_min
+
+    # Filtrowanie wartości
+    mask = (quefrency >= min_q) & (quefrency <= max_q)
+    quef_filtered = quefrency[mask]
+    cepstrum_filtered = cepstrum[mask]
+
+    # Tworzenie wykresu
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=quef_filtered,
+        y=cepstrum_filtered,
+        mode="lines",
+        name="Cepstrum"
+    ))
+
+    fig.update_layout(
+        title=f"Cepstrum ({f0_min}–{f0_max} Hz)",
+        xaxis_title="Quefrency (s)",
+        yaxis_title="Amplitude",
+        showlegend=False
+    )
+
     return fig

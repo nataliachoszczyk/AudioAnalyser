@@ -150,3 +150,12 @@ def compute_cepstral_pitch(audio, sr, frame_size, frame_step, f0_min=50, f0_max=
         times.append(start / sr)
 
     return times, cepstral_f0
+
+def compute_global_cepstrum(audio, sr):
+    # Transformacja do cepstrum (dla całego sygnału)
+    spectrum = np.fft.fft(audio)
+    log_spectrum = np.log(np.abs(spectrum) + 1e-10)
+    cepstrum = np.fft.ifft(log_spectrum).real
+
+    quefrency = np.arange(len(cepstrum)) / sr  # czas (s)
+    return quefrency, cepstrum
